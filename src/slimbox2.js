@@ -14,7 +14,7 @@
 	preload = {}, preloadPrev = new Image(), preloadNext = new Image(), preloadFlip = new Image(),
 
 	// DOM elements
-	overlay, center, image, sizer, flipLink, prevLink, nextLink, bottomContainer, bottom, caption, number, loading = false;
+	overlay, center, image, content, sizer, flipLink, prevLink, nextLink, bottomContainer, bottom, caption, number, loading = false;
 
 	/*
 		Initialization
@@ -33,7 +33,8 @@
 		image = $('<div id="lbImage" />').appendTo(center).append(
 			sizer = $('<div style="position: relative;" />').append([
 				prevLink = $('<a id="lbPrevLink" href="#" />').click(previous)[0],
-				nextLink = $('<a id="lbNextLink" href="#" />').click(next)[0]
+				nextLink = $('<a id="lbNextLink" href="#" />').click(next)[0],
+				content  = $('<div />')[0]
 			])[0]
 		)[0];
 
@@ -71,7 +72,7 @@
 			previousKeys: [37, 80],			// Array of keycodes to navigate to the previous image, default: Left arrow (37), 'p' (80)
 			nextKeys: [39, 78],			// Array of keycodes to navigate to the next image, default: Right arrow (39), 'n' (78)
 			flipKeys: [9, 70],			// Array of keycodes to navigate to the flipped image, default: Tab (9), 'f' (70)
-			animateType: "both"   // Type of resize animation to play. "hw": height resized then width; "wh" width resized then height; "both" resize width and height simultaneously; 
+			animateType: "both"   // Type of resize animation to play. "hw": height resized then width; "wh" width resized then height; "both" resize width and height simultaneously;
 		}, _options);
 
 		// The function is called for a single image, with URL and Title as first two arguments
@@ -105,7 +106,14 @@
 	*/
 	$.fn.slimbox = function(_options, linkMapper, linksFilter) {
 		linkMapper = linkMapper || function(el) {
-			return [el.href, el.title, (el.rev==""?null:el.rev)];
+			switch (el.nodeName.toLowerCase()) {
+				case 'a':
+					return [el.href, el.title, (el.rev==""?null:el.rev)];
+					break;
+				case 'div':
+					return [el.innerHTML];
+					break;
+			}
 		};
 
 		linksFilter = linksFilter || function() {
@@ -180,41 +188,54 @@
 	function flip() {
 		if(!loading && activeImage >= 0 && images[activeImage][2]) {
 			loading = true;
-			
+
 			if(activeURL === images[activeImage][2]){
 				activeURL = images[activeImage][0];
 			}else{
 				activeURL = images[activeImage][2];
 			}
 			stop(true);
-						
+
 			preload = new Image();
-			
+
 			if(options.do3DFlip){
 				preload.onload = function(){flipBox();};
 			} else {
 				preload.onload = function(){animateBox(true);};
 			}
-			
+
 			preload.src = activeURL;
 		}
 		return false;
 	}
 
+	/**
+	 * changes to image #imageIndex
+	 */
 	function changeImage(imageIndex) {
 		if (!loading && imageIndex >= 0) {
 			loading = true;
 			activeImage = imageIndex;
-			activeURL = images[activeImage][0];
+			var curr = images[activeImage];
+			if (curr.length > 1) {
+				activeURL = images[activeImage][0];
+			} else {
+				activeURL = '#';
+			}
+
 			prevImage = (activeImage || (options.loop ? images.length : 0)) - 1;
 			nextImage = ((activeImage + 1) % images.length) || (options.loop ? 0 : -1);
 
 			stop();
 			center.className = "lbLoading";
 
-			preload = new Image();
-			preload.onload = function(){animateBox();};
-			preload.src = activeURL;
+			if (curr.length > 1) {
+				preload = new Image();
+				preload.onload = function(){animateBox();};
+				preload.src = activeURL;
+			} else {
+				animateBox();
+			}
 		}
 
 		return false;
@@ -224,19 +245,19 @@
 		center.className = "";
 
 		$(caption).html(images[activeImage][1] || "");
-		
+
 		if (prevImage >= 0) preloadPrev.src = images[prevImage][0];
 		if (nextImage >= 0) preloadNext.src = images[nextImage][0];
-		if(images[activeImage][2] != null) { 
+		if(images[activeImage][2] != null) {
 			if(activeURL === images[activeImage][0]) {
-				preloadFlip.src = images[activeImage][2]; 
+				preloadFlip.src = images[activeImage][2];
 			}	else {
-				preloadFlip.src = images[activeImage][0]; 
+				preloadFlip.src = images[activeImage][0];
 			}
 		}
 
 		resizeBox(true);
-		
+
 		var top = Math.max(0, middle - (centerHeight / 2));
 		$(center).queue(function() {
 			$(sizer).width(preload.width);
@@ -259,33 +280,41 @@
 					$(image).css({display: "none", visibility: "", opacity: ""}).show();
 					loading = false;
 				}
-			});			
+			});
 		});
 	}
 
 	function animateBox(isFlipping) {
 		center.className = "";
 		$(image).fadeTo(options.imageFadeDuration, 0, function(){
-			$(image).css({backgroundImage: "url(" + activeURL + ")", visibility: "hidden", display: ""});
-			$(sizer).width(preload.width);
-			$([sizer, prevLink, nextLink]).height(preload.height);
-	
+			if (images[activeImage].length > 1) {
+				$(image).css({backgroundImage: "url(" + activeURL + ")", visibility: "hidden", display: ""});
+				$(content).html('');
+				$(sizer).width(preload.width);
+				$([sizer, prevLink, nextLink]).height(preload.height);
+			} else {
+				$(image).css({backgroundImage: ''});
+				$(content).html(images[activeImage][0]);
+				$(sizer).width(options.initialWidth);
+				$([sizer, prevLink, nextLink]).height(options.initialHeight);
+			}
+
 			$(caption).html(images[activeImage][1] || "");
-			
+
 			$(number).html((((images.length > 1) && options.counterText) || "").replace(/{x}/, activeImage + 1).replace(/{y}/, images.length)+((images[activeImage][2]!==null)?" "+((activeURL === images[activeImage][2])?options.counterBackText:options.counterFrontText):"") );
-	
+
 			if (prevImage >= 0) preloadPrev.src = images[prevImage][0];
 			if (nextImage >= 0) preloadNext.src = images[nextImage][0];
-			if(images[activeImage][2] != null) { 
+			if(images[activeImage][2] != null) {
 				if(activeURL === images[activeImage][0]) {
-					preloadFlip.src = images[activeImage][2]; 
+					preloadFlip.src = images[activeImage][2];
 				}	else {
-					preloadFlip.src = images[activeImage][0]; 
+					preloadFlip.src = images[activeImage][0];
 				}
 			}
 
-			resizeBox(isFlipping);
-			
+			if (images[activeImage].length > 1) resizeBox(isFlipping);
+
 			var top = Math.max(0, middle - (centerHeight / 2));
 			if(!isFlipping){
 				$(center).queue(function() {
@@ -299,7 +328,7 @@
 			}
 		});
 	}
-	
+
 	function resizeBox(isFlipping){
 		centerWidth = preload.width+parseFloat($(image).css("border-left-width"))+parseFloat($(image).css("border-right-width"));//image.offsetWidth;
 		centerHeight = preload.height+parseFloat($(image).css("border-bottom-width"))+parseFloat($(image).css("border-top-width"));//image.offsetHeight;
