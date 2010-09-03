@@ -2,6 +2,7 @@ SLIMBOX V2.04 README
 ====================
 The ultimate lightweight Lightbox clone
 ... now using the jQuery javascript library
+... now with support for arbitrary elements inside div tags
 
 (c) Christophe Beyls 2007-2010
 MIT-style license
