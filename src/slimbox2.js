@@ -32,9 +32,9 @@
 
 		image = $('<div id="lbImage" />').appendTo(center).append(
 			sizer = $('<div style="position: relative;" />').append([
+				content  = $('<div style="position: relative;" />')[0],
 				prevLink = $('<a id="lbPrevLink" href="#" />').click(previous)[0],
-				nextLink = $('<a id="lbNextLink" href="#" />').click(next)[0],
-				content = $('<div />')[0]
+				nextLink = $('<a id="lbNextLink" href="#" />').click(next)[0]
 			])[0]
 		)[0];
 
