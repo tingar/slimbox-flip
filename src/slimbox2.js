@@ -34,7 +34,7 @@
 			sizer = $('<div style="position: relative;" />').append([
 				prevLink = $('<a id="lbPrevLink" href="#" />').click(previous)[0],
 				nextLink = $('<a id="lbNextLink" href="#" />').click(next)[0],
-				content  = $('<div />')[0]
+				content = $('<div />')[0]
 			])[0]
 		)[0];
 
@@ -294,7 +294,12 @@
 				$([sizer, prevLink, nextLink]).height(preload.height);
 			} else {
 				$(image).css({backgroundImage: ''});
-				$(content).html(images[activeImage].html());
+				$(content)
+					.html(images[activeImage].html())
+					.css({
+						width: images[activeImage].css('width'),
+						height: images[activeImage].css('height')
+					});
 				$(sizer).width(options.initialWidth);
 				$([sizer, prevLink, nextLink]).height(options.initialHeight);
 			}
