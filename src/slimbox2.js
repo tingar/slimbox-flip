@@ -313,7 +313,7 @@
 				}
 			}
 
-			if (images[activeImage].length > 1) resizeBox(isFlipping);
+			resizeBox(isFlipping);
 
 			var top = Math.max(0, middle - (centerHeight / 2));
 			if(!isFlipping){
@@ -329,38 +329,49 @@
 		});
 	}
 
-	function resizeBox(isFlipping){
-		centerWidth = preload.width+parseFloat($(image).css("border-left-width"))+parseFloat($(image).css("border-right-width"));//image.offsetWidth;
-		centerHeight = preload.height+parseFloat($(image).css("border-bottom-width"))+parseFloat($(image).css("border-top-width"));//image.offsetHeight;
+	function resizeBox(isFlipping) {
+		var w, h;
+
+		if (images[activeImage].length > 1) {
+			w = preload.width;
+			h = preload.height;
+		} else {
+			w = options.initialWidth;
+			h = options.initialHeight;
+		}
+
+		centerWidth = w+parseFloat($(image).css("border-left-width"))+parseFloat($(image).css("border-right-width"));//image.offsetWidth;
+		centerHeight = h+parseFloat($(image).css("border-bottom-width"))+parseFloat($(image).css("border-top-width"));//image.offsetHeight;
 		var top = Math.max(0, middle - (centerHeight / 2));
 		if (options.animateType == "both" && (center.offsetHeight != centerHeight || center.offsetWidth != centerWidth) ) {
 			$(center).animate({height: centerHeight, top: top, width: centerWidth, marginLeft: -centerWidth/2}, options.resizeDuration, options.resizeEasing);
 				if(isFlipping) { $(bottomContainer).animate({width: centerWidth, top: top + centerHeight, marginLeft: -centerWidth/2}, options.resizeDuration, options.resizeEasing); }
-				if(isFlipping) { $(sizer).animate({width: preload.width, height: preload.height}); $([prevLink, nextLink]).animate({height: preload.height}); }
+				if(isFlipping) { $(sizer).animate({width: w, height: h}); $([prevLink, nextLink]).animate({height: h}); }
 		} else if (options.animateType == "hw") {
 			if (center.offsetHeight != centerHeight) {
 				$(center).animate({height: centerHeight, top: top}, options.resizeDuration, options.resizeEasing);
 				if(isFlipping) { $(bottomContainer).animate({top: top + centerHeight}, options.resizeDuration, options.resizeEasing); }
-				if(isFlipping) { $([sizer, prevLink, nextLink]).animate({height: preload.height}); }
+				if(isFlipping) { $([sizer, prevLink, nextLink]).animate({height: h}); }
 			}
 			if (center.offsetWidth != centerWidth) {
 				$(center).animate({width: centerWidth, marginLeft: -centerWidth/2}, options.resizeDuration, options.resizeEasing);
 				if(isFlipping) { $(bottomContainer).animate({width: centerWidth, marginLeft: -centerWidth/2}, options.resizeDuration, options.resizeEasing); }
-				if(isFlipping) { $(sizer).animate({width: preload.width}); }
+				if(isFlipping) { $(sizer).animate({width: w}); }
 			}
 		} else if (options.animateType == "wh") {
 			if (center.offsetWidth != centerWidth) {
 				$(center).animate({width: centerWidth, marginLeft: -centerWidth/2}, options.resizeDuration, options.resizeEasing);
 				if(isFlipping) { $(bottomContainer).animate({width: centerWidth, marginLeft: -centerWidth/2}, options.resizeDuration, options.resizeEasing); }
-				if(isFlipping) { $(sizer).animate({width: preload.width}); }
+				if(isFlipping) { $(sizer).animate({width: w}); }
 			}
 			if (center.offsetHeight != centerHeight) {
 				$(center).animate({height: centerHeight, top: top}, options.resizeDuration, options.resizeEasing);
 				if(isFlipping) { $(bottomContainer).animate({top: top + centerHeight}, options.resizeDuration, options.resizeEasing); }
-				if(isFlipping) { $([sizer, prevLink, nextLink]).animate({height: preload.height}); }
+				if(isFlipping) { $([sizer, prevLink, nextLink]).animate({height: h}); }
 			}
 		}
 	}
+
 	function animateCaption() {
 		if(images[activeImage][2]) $(flipLink).show();
 		if (prevImage >= 0) $(prevLink).show();
